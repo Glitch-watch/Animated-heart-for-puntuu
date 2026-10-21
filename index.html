@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animated Heart</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #050002;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="heartCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const width = 600;
+    const height = 700;
+    canvas.width = width;
+    canvas.height = height;
+
+    const SCALE = 100;
+    const N = 2000;
+    const pts = [];
+
+    // Heart mathematical formula
+    function heart(u) {
+      const x = 1.6 * Math.pow(Math.sin(u), 3);
+      const y = 1.3 * Math.cos(u) - 0.5 * Math.cos(2 * u) - 0.2 * Math.cos(3 * u) - 0.1 * Math.cos(4 * u);
+      return { x, y };
+    }
+
+    // Generate random heart points
+    for (let i = 0; i < N; i++) {
+      const u = Math.random() * 2 * Math.PI;
+      const h = heart(u);
+      const rad = Math.sqrt(Math.random());
+      const x = h.x * rad;
+      const y = h.y * rad;
+      const z = 1.1 * (1 - rad) * (Math.random() * 2 - 1);
+      pts.push({ x, y, z });
+    }
+
+    // Color gradient helper
+    function getCol(f) {
+      f = Math.max(0.0, Math.min(1.0, f));
+      const r1 = 70, g1 = 0, b1 = 10;
+      const r2 = 255, g2 = 30, b2 = 50;
+      const r = Math.floor(r1 + (r2 - r1) * f);
+      const g = Math.floor(g1 + (g2 - g1) * f);
+      const b = Math.floor(b1 + (b2 - b1) * f);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    let angle = 0;
+
+    function render() {
+      ctx.fillStyle = "#050002";
+      ctx.fillRect(0, 0, width, height);
+
+      angle += 0.02;
+
+      // Draw each point
+      pts.forEach(pt => {
+        // Pulse effect
+        const pulse = 1 + 0.05 * Math.sin(angle * 2);
+        
+        const px = width / 2 + pt.x * SCALE * pulse;
+        const py = height / 2 - pt.y * SCALE * pulse; // Invert Y for canvas
+
+        const colorFactor = (pt.z + 1) / 2;
+        ctx.fillStyle = getCol(colorFactor);
+
+        ctx.beginPath();
+        ctx.arc(px, py, 1.8, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>
