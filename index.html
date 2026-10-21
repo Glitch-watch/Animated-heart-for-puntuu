@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Animated Heart</title>
+  <title>Rotating Animated Heart</title>
   <style>
     body {
       margin: 0;
@@ -31,8 +31,8 @@
     canvas.width = width;
     canvas.height = height;
 
-    const SCALE = 100;
-    const N = 2000;
+    const SCALE = 110;
+    const N = 2500;
     const pts = [];
 
     // Heart mathematical formula
@@ -42,14 +42,14 @@
       return { x, y };
     }
 
-    // Generate random heart points
+    // Generate random 3D points inside the heart volume
     for (let i = 0; i < N; i++) {
       const u = Math.random() * 2 * Math.PI;
       const h = heart(u);
       const rad = Math.sqrt(Math.random());
       const x = h.x * rad;
       const y = h.y * rad;
-      const z = 1.1 * (1 - rad) * (Math.random() * 2 - 1);
+      const z = 1.2 * (1 - rad) * (Math.random() * 2 - 1);
       pts.push({ x, y, z });
     }
 
@@ -70,17 +70,38 @@
       ctx.fillStyle = "#050002";
       ctx.fillRect(0, 0, width, height);
 
-      angle += 0.02;
+      // Increment angle to rotate in a circle
+      angle += 0.03;
+
+      // Sort points by their Z depth so back particles draw behind front particles
+      const rotatedPts = pts.map(pt => {
+        // 3D Y-axis rotation (spinning around in a circle)
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        const rx = pt.x * cosA + pt.z * sinA;
+        const rz = -pt.x * sinA + pt.z * cosA;
+        const ry = pt.y;
+
+        // Subtle beat/pulse effect combined with rotation
+        const pulse = 1 + 0.04 * Math.sin(angle * 3);
+
+        return {
+          x: rx * pulse,
+          y: ry * pulse,
+          z: rz
+        };
+      });
+
+      // Sort by depth (painter's algorithm)
+      rotatedPts.sort((a, b) => a.z - b.z);
 
       // Draw each point
-      pts.forEach(pt => {
-        // Pulse effect
-        const pulse = 1 + 0.05 * Math.sin(angle * 2);
-        
-        const px = width / 2 + pt.x * SCALE * pulse;
-        const py = height / 2 - pt.y * SCALE * pulse; // Invert Y for canvas
+      rotatedPts.forEach(pt => {
+        const px = width / 2 + pt.x * SCALE;
+        const py = height / 2 - pt.y * SCALE; // Invert Y for canvas
 
-        const colorFactor = (pt.z + 1) / 2;
+        const colorFactor = (pt.z + 1.2) / 2.4;
         ctx.fillStyle = getCol(colorFactor);
 
         ctx.beginPath();
